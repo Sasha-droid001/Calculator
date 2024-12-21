@@ -1,11 +1,28 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 )
+
+// Структура для запроса
+type CalculateRequest struct {
+	Expression string `json:"expression"`
+}
+
+// Структура для успешного ответа
+type CalculateResponse struct {
+	Result string `json:"result"`
+}
+
+// Структура для ошибки
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
 
 // Calc evaluates a mathematical expression given as a string.
 func Calc(expression string) (float64, error) {
@@ -153,12 +170,53 @@ func precedence(op string) int {
 	}
 }
 
-func main() {
-	expression := "2 + 3 * 7 - 4 / (2 + 2)"
-	result, err := Calc(expression)
+// Обработчик для /api/v1/calculate
+func calculateHandler(w http.ResponseWriter, r *http.Request) {
+	// Проверяем, что метод POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Парсим тело запроса
+	var calcReq CalculateRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&calcReq); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Bad request"})
+		return
+	}
+
+	// Проверяем, что выражение не пустое
+	if calcReq.Expression == "" {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Expression is not valid"})
+		return
+	}
+
+	// Вычисляем выражение
+	result, err := Calc(calcReq.Expression)
 	if err != nil {
-		fmt.Println("Error:", err)
-	} else {
-		fmt.Println("Result:", result)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Expression is not valid"})
+		return
+	}
+
+	var Respons CalculateResponse
+	Respons.Result = strconv.FormatFloat(result, 'f', -1, 64)
+	// Отправляем успешный ответ с результатом
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Respons)
+}
+
+func main() {
+	// Регистрируем обработчик
+	http.HandleFunc("/api/v1/calculate", calculateHandler)
+
+	// Запускаем сервер на порту 8080
+	fmt.Println("Server is running on port 80...")
+	if err := http.ListenAndServe(":80", nil); err != nil {
+		fmt.Println("Failed to start server:", err)
 	}
 }
