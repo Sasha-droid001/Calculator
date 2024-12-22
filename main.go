@@ -183,7 +183,7 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&calcReq); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrorResponse{Error: "Bad request"})
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Internal server error"})
 		return
 	}
 
