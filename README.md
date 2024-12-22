@@ -13,7 +13,7 @@
     ```
 3. Перейдите в папку проекта и запустите сервер:
     ```bash
-    go run ./cmd/calc_service/...
+    go run main.go
     ```
 4. Сервис будет доступен по адресу: [http://localhost/api/v1/calculate](http://localhost/api/v1/calculate).
 
@@ -29,40 +29,54 @@
 #### Пример запроса с использованием PowerShell
 
 
+
+Пример корректного запроса к сервису
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8080/api/v1/calculate" `
--Method POST `
--Headers @{"Content-Type"="application/json"} `
--Body '{"expression": "2+2*2"}'
-Пример успешного ответа
-json
-Копировать код
+Invoke-RestMethod -Uri "http://localhost:80/api/v1/calculate" `
+>> -Method POST `
+>> -Headers @{"Content-Type"="application/json"} `
+>> -Body '{"expression": "2+2*2"}'
+```
+Пример успешного ответа json
+код ответа: 200
 {
-  "result": "6.000000"
+  "result": "6"
 }
-Пример ошибки 500
-Если выражение содержит некорректный символ $, сервер вернёт ошибку 500:
 
-Пример запроса
-powershell
-Копировать код
-Invoke-RestMethod -Uri "http://localhost:8080/api/v1/calculate" `
--Method POST `
--Headers @{"Content-Type"="application/json"} `
--Body '{"expression": "1+$2"}'
-Пример ответа
-json
-Копировать код
+Пример запроса с отсутствующим выражением
+```powershell
+Invoke-RestMethod -Uri "http://localhost/api/v1/calculate" `   
+>> -Method POST `
+>> -Headers @{"Content-Type"="application/json"} `
+>> -Body '{"express": ""}' 
+```       
+Пример ответа json
+код ответа: 422
 {
-  "error": "Некорректное выражение"
+  "error": "Expression is not valid"
 }
-Тестирование
-Для запуска тестов выполните:
 
-bash
-Копировать код
-go test ./...
-Примечания
-Для работы API требуется установленный Go (версии 1.18 и выше).
-Все зависимости проекта управляются через go mod. Убедитесь, что в корне проекта находятся go.mod и go.sum.
+Пример запроса с некорректным выражением
+```powershell
+Invoke-RestMethod -Uri "http://localhost/api/v1/calculate" `
+>> -Method POST `
+>> -Headers @{"Content-Type"="application/json"} `
+>> -Body '{"expression": "2+2*/52"}'
+```
+Пример ответа json
+код ответа: 422
+{
+  "error": "Expression is not valid"
+}
 
+Пример с пустым телом запроса
+```powershell
+Invoke-RestMethod -Uri "http://localhost/api/v1/calculate" `
+>> -Method POST `
+>> -Headers @{"Content-Type"="application/json"}
+```
+Пример ответа json
+код ответа: 500
+{
+  "error": "Bad request"
+}
