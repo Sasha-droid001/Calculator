@@ -78,5 +78,5 @@ Invoke-RestMethod -Uri "http://localhost/api/v1/calculate" `
 Пример ответа json
 код ответа: 500
 {
-  "error": "Bad request"
+  "error": "Internal server error"
 }
